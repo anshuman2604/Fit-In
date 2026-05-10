@@ -8,8 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error('AI CHAT ERROR: GEMINI_API_KEY is missing.');
-      return NextResponse.json({ error: 'AI Config Missing' }, { status: 500 });
+      return NextResponse.json({ error: 'GEMINI_API_KEY is missing on server.' }, { status: 500 });
     }
 
     const supabase = await createClient();
@@ -38,42 +37,47 @@ export async function POST(req: NextRequest) {
 
     const SYSTEM_PROMPT = `
 You are the "Fit In Coach", a personalized Indian nutrition mentor. 
-Guide the user based ONLY on their real-time data below.
-
-USER PROFILE: ${profile?.display_name}, Goal: ${profile?.goal}, ${profile?.weight_kg}kg, ${profile?.height_cm}cm.
-TODAY'S REMAINING: ${targets.calories - consumed.calories} kcal (${targets.protein - consumed.protein}g P, ${targets.carbs - consumed.carbs}g C, ${targets.fats - consumed.fats}g F).
-
-RULES:
-1. Suggest specific Indian foods with measurements.
-2. Use **Markdown** and **bold text** for numbers/foods.
-3. Be concise. Reference remaining macros.
+USER: ${profile?.display_name}, Goal: ${profile?.goal}.
+REMAINING: ${targets.calories - consumed.calories} kcal (${targets.protein - consumed.protein}g P, ${targets.carbs - consumed.carbs}g C, ${targets.fats - consumed.fats}g F).
+RULES: Suggest specific Indian foods. Use Markdown/Bold. Be concise.
 `;
 
-    // 4. CALL AI
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    // Transform history
-    const history = messages.slice(0, -1).map((m: any) => ({
-      role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }]
-    }));
-
-    const chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-        { role: 'model', parts: [{ text: "Acknowledged. I am your Fit In Coach." }] },
-        ...history
-      ],
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      systemInstruction: SYSTEM_PROMPT // Correct way to handle system context
     });
 
+    // TRANSFORM HISTORY: Ensure alternating User/Model roles
+    // We skip the first greeting from the frontend to ensure history starts with 'user' if possible,
+    // or we map it correctly. Google history MUST start with 'user' if not empty.
+    const history = [];
+    const chatMessages = messages.slice(0, -1);
+
+    for (let i = 0; i < chatMessages.length; i++) {
+      const msg = chatMessages[i];
+      // Skip the initial greeting if it's the very first message in the history array
+      if (i === 0 && msg.role === 'model') continue; 
+      
+      history.push({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      });
+    }
+
+    const chat = model.startChat({ history });
     const lastMessage = messages[messages.length - 1].content;
     const result = await chat.sendMessage(lastMessage);
     const response = await result.response;
+    
     return NextResponse.json({ content: response.text() });
 
   } catch (error: any) {
-    console.error('AI CHAT EXCEPTION:', error.message || error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('AI CHAT ERROR:', error);
+    return NextResponse.json({ 
+      error: 'AI Error', 
+      details: error.message,
+      suggestion: 'Check if gemini-2.5-flash is available for your API key.'
+    }, { status: 500 });
   }
 }
