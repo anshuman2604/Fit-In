@@ -7,14 +7,7 @@ The user might speak in English, Hindi, or Hinglish.
 ### Extraction Rules:
 1. Extract every food item mentioned.
 2. Identify the quantity (number) and the unit (g, ml, bowl, cup, medium, large, piece, tsp, tbsp etc.).
-3. For Rotis/Parathas, prefer "medium" as the unit if not specified. 
-4. For Dals/Rice/Sabzis, prefer "bowl" as the unit if not specified.
-5. Standardize the food name to a searchable English term.
-   - Use "Rice" for chawal/rice.
-   - Use "Chole" for chickpeas/chole.
-   - Use "Dal" for dal/daal/lentils.
-   - Use "Paneer" for paneer.
-   - If the user says "cooked rice", just extract "Rice" as the food name.
+3. Standardize the food name to a searchable English term.
 
 ### Output Format:
 Return a JSON array of objects. ALWAYS include estimated macros and searchKeywords.
@@ -38,18 +31,16 @@ Return a JSON array of objects. ALWAYS include estimated macros and searchKeywor
 export async function parseMeal(text: string) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('AI PARSE ERROR: GEMINI_API_KEY is missing in environment.');
-      return [];
-    }
+    if (!apiKey) return [];
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash', 
+      systemInstruction: SYSTEM_PROMPT, // Cleaned up: Using official systemInstruction
       generationConfig: { responseMimeType: 'application/json' } 
     });
 
-    const prompt = `${SYSTEM_PROMPT}\n\nUser Input: "${text}"\n\nReturn JSON ONLY.`;
+    const prompt = `Parse this meal input: "${text}"`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let content = response.text();
@@ -60,8 +51,8 @@ export async function parseMeal(text: string) {
     if (Array.isArray(parsed)) return parsed;
     if (parsed.items && Array.isArray(parsed.items)) return parsed.items;
     return [];
-  } catch (error: any) {
-    console.error('AI PARSE EXCEPTION:', error.message || error);
+  } catch (error) {
+    console.error('AI Parse Error:', error);
     return [];
   }
 }

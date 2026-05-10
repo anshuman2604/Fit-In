@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'GEMINI_API_KEY is missing on server.' }, { status: 500 });
+      return NextResponse.json({ error: 'AI configuration error.' }, { status: 500 });
     }
 
     const supabase = await createClient();
@@ -39,24 +39,20 @@ export async function POST(req: NextRequest) {
 You are the "Fit In Coach", a personalized Indian nutrition mentor. 
 USER: ${profile?.display_name}, Goal: ${profile?.goal}.
 REMAINING: ${targets.calories - consumed.calories} kcal (${targets.protein - consumed.protein}g P, ${targets.carbs - consumed.carbs}g C, ${targets.fats - consumed.fats}g F).
-RULES: Suggest specific Indian foods. Use Markdown/Bold. Be concise.
+RULES: Suggest specific Indian foods. Use Markdown. Be concise.
 `;
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash',
-      systemInstruction: SYSTEM_PROMPT // Correct way to handle system context
+      systemInstruction: SYSTEM_PROMPT
     });
 
-    // TRANSFORM HISTORY: Ensure alternating User/Model roles
-    // We skip the first greeting from the frontend to ensure history starts with 'user' if possible,
-    // or we map it correctly. Google history MUST start with 'user' if not empty.
     const history = [];
     const chatMessages = messages.slice(0, -1);
 
     for (let i = 0; i < chatMessages.length; i++) {
       const msg = chatMessages[i];
-      // Skip the initial greeting if it's the very first message in the history array
       if (i === 0 && msg.role === 'model') continue; 
       
       history.push({
@@ -74,10 +70,6 @@ RULES: Suggest specific Indian foods. Use Markdown/Bold. Be concise.
 
   } catch (error: any) {
     console.error('AI CHAT ERROR:', error);
-    return NextResponse.json({ 
-      error: 'AI Error', 
-      details: error.message,
-      suggestion: 'Check if gemini-2.5-flash is available for your API key.'
-    }, { status: 500 });
+    return NextResponse.json({ error: 'The AI is currently busy. Please try again in a moment.' }, { status: 500 });
   }
 }
