@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('AI CHAT ERROR: GEMINI_API_KEY is missing.');
+      return NextResponse.json({ error: 'AI Config Missing' }, { status: 500 });
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -41,16 +49,11 @@ RULES:
 3. Be concise. Reference remaining macros.
 `;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('AI Chat Error: GEMINI_API_KEY is missing');
-      return NextResponse.json({ error: 'AI Configuration missing' }, { status: 500 });
-    }
-
+    // 4. CALL AI
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Transform history to Google Format
+    // Transform history
     const history = messages.slice(0, -1).map((m: any) => ({
       role: m.role === 'user' ? 'user' : 'model',
       parts: [{ text: m.content }]
@@ -70,7 +73,7 @@ RULES:
     return NextResponse.json({ content: response.text() });
 
   } catch (error: any) {
-    console.error('AI Chat Error:', error);
+    console.error('AI CHAT EXCEPTION:', error.message || error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

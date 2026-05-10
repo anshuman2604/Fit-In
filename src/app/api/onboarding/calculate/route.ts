@@ -2,20 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('AI ONBOARDING ERROR: GEMINI_API_KEY is missing.');
+      return NextResponse.json({ error: 'AI Config Missing' }, { status: 500 });
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const metrics = await req.json();
     const prompt = `Calculate targets for: ${JSON.stringify(metrics)}`;
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('Onboarding AI Error: GEMINI_API_KEY is missing');
-      return NextResponse.json({ error: 'AI Configuration missing' }, { status: 500 });
-    }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
@@ -42,7 +44,7 @@ You are an expert Fitness Coach and Nutritionist. Return a JSON object ONLY:
     return NextResponse.json(JSON.parse(content));
 
   } catch (error: any) {
-    console.error('Onboarding AI Error:', error);
+    console.error('AI ONBOARDING EXCEPTION:', error.message || error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

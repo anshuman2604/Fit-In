@@ -17,7 +17,7 @@ The user might speak in English, Hindi, or Hinglish.
    - If the user says "cooked rice", just extract "Rice" as the food name.
 
 ### Output Format:
-Return a JSON array of objects ONLY. ALWAYS include estimated macros and searchKeywords.
+Return a JSON array of objects. ALWAYS include estimated macros and searchKeywords.
 [
   {
     "food": "Name from user text",
@@ -39,31 +39,29 @@ export async function parseMeal(text: string) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error('AI Parse Error: GEMINI_API_KEY is missing');
+      console.error('AI PARSE ERROR: GEMINI_API_KEY is missing in environment.');
       return [];
     }
 
-    // CLOUD-SAFE: Initialize inside the function to ensure ENV is loaded
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash', 
       generationConfig: { responseMimeType: 'application/json' } 
     });
 
-    const prompt = `User Input: "${text}"\n\nReturn JSON ONLY according to rules.`;
-    const result = await model.generateContent(SYSTEM_PROMPT + "\n\n" + prompt);
+    const prompt = `${SYSTEM_PROMPT}\n\nUser Input: "${text}"\n\nReturn JSON ONLY.`;
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     let content = response.text();
 
-    // Clean Markdown
     content = content.replace(/```json\n?|```/g, '').trim();
-    
     const parsed = JSON.parse(content);
+    
     if (Array.isArray(parsed)) return parsed;
-    if (parsed.items) return parsed.items;
+    if (parsed.items && Array.isArray(parsed.items)) return parsed.items;
     return [];
-  } catch (error) {
-    console.error('AI Parse Error:', error);
+  } catch (error: any) {
+    console.error('AI PARSE EXCEPTION:', error.message || error);
     return [];
   }
 }
