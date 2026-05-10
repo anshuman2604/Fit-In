@@ -1,7 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
 const SYSTEM_PROMPT = `
 You are an expert Indian Nutrition Assistant. Your task is to parse user input about meals and extract structured data.
 The user might speak in English, Hindi, or Hinglish.
@@ -45,13 +43,12 @@ export async function parseMeal(text: string) {
       return [];
     }
 
+    // CLOUD-SAFE: Initialize inside the function to ensure ENV is loaded
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash', 
       generationConfig: { responseMimeType: 'application/json' } 
     });
-
-    console.log('AI Parse: Parsing meal:', text);
 
     const prompt = `User Input: "${text}"\n\nReturn JSON ONLY according to rules.`;
     const result = await model.generateContent(SYSTEM_PROMPT + "\n\n" + prompt);
@@ -63,7 +60,7 @@ export async function parseMeal(text: string) {
     
     const parsed = JSON.parse(content);
     if (Array.isArray(parsed)) return parsed;
-    if (parsed.items && Array.isArray(parsed.items)) return parsed.items;
+    if (parsed.items) return parsed.items;
     return [];
   } catch (error) {
     console.error('AI Parse Error:', error);
