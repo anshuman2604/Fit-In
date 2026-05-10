@@ -19,15 +19,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* 
-   ELITE GLOBAL TRANSITION 
-   This creates the "Melt" effect when switching themes.
+   REMOVED GLOBAL * TRANSITION 
+   It conflicts with Framer Motion and causes flickering.
+   Transitions are now applied surgically only where needed.
 */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 700ms; /* Slowed down for an elegant melt feel */
-}
-
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -35,11 +30,15 @@ body {
   min-height: 100vh;
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  /* Surgical transition for theme melting */
+  transition: background-color 700ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Glassmorphism utility */
 .glass {
   @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-3xl border border-white/20 dark:border-white/5;
+  /* Surgical transition for glass color melting */
+  transition: background-color 700ms ease, border-color 700ms ease;
 }
 
 /* Custom Scrollbar */

@@ -19,7 +19,9 @@ export function MealLogSection({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setSearchResults([]);
+        if (typeof setSearchResults === 'function') {
+          setSearchResults([]);
+        }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -29,7 +31,7 @@ export function MealLogSection({
   const onSearchChange = (val: string) => {
     setSearchQuery(val);
     if (val.length < 2) {
-      setSearchResults([]);
+      setSearchResults?.([]);
       return;
     }
     handleSearch(val);
@@ -37,12 +39,12 @@ export function MealLogSection({
 
   return (
     <div className="space-y-8">
-      {/* Input Section - FIXED DROPDOWN Z-INDEX */}
+      {/* Input Section - HIGHEST Z-INDEX AND PORTAL-LIKE DISPLAY */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={iosSpring} 
-        className="relative glass rounded-[32px] p-7 space-y-6 z-[60]"
+        className="relative glass rounded-[32px] p-7 space-y-6 z-[100]" 
       >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-black tracking-tight text-gray-900 dark:text-white uppercase leading-none">Meal Log</h2>
@@ -86,7 +88,7 @@ export function MealLogSection({
             <motion.div key="precise" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 relative">
               {!selectedFood ? (
                 <div className="relative" ref={searchRef}>
-                  <div className="relative">
+                  <div className="relative z-[70]">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                     <input type="text" value={searchQuery} onChange={e => onSearchChange(e.target.value)} placeholder="Search foods..." className="w-full bg-gray-100/50 dark:bg-black/30 border-none rounded-2xl pl-11 pr-5 py-4 text-base font-bold dark:text-white shadow-inner" />
                     {isSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-indigo-500" size={18} />}
@@ -94,15 +96,15 @@ export function MealLogSection({
                   <AnimatePresence>
                     {searchResults.length > 0 && (
                       <motion.div 
-                        initial={{ opacity: 0, y: 10 }} 
+                        initial={{ opacity: 0, y: 5 }} 
                         animate={{ opacity: 1, y: 0 }} 
-                        className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-3xl shadow-[0_30px_70px_rgba(0,0,0,0.15)] border border-slate-100 dark:border-white/10 z-[300] max-h-64 overflow-y-auto overflow-x-hidden"
+                        className="absolute left-0 right-0 mt-3 bg-white dark:bg-slate-900 rounded-3xl shadow-[0_30px_100px_rgba(0,0,0,0.4)] border-none z-[999] max-h-64 overflow-y-auto overflow-x-hidden"
                       >
                         {searchResults.map((f: any) => (
                           <button 
                             key={f.id} 
                             onClick={() => selectFood(f)} 
-                            className="w-full px-6 py-4 text-left hover:bg-slate-50 dark:hover:bg-white/5 border-b border-slate-50 dark:border-white/5 last:border-0 group transition-colors"
+                            className="w-full px-6 py-4 text-left hover:bg-indigo-50 dark:hover:bg-white/5 border-none group transition-colors"
                           >
                             <p className="font-black text-sm text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">{f.name}</p>
                             <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{f.category}</p>
@@ -114,7 +116,7 @@ export function MealLogSection({
                 </div>
               ) : (
                 <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-indigo-50/30 dark:bg-indigo-500/5 rounded-3xl p-5 space-y-4 border border-indigo-100/30">
-                  <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+                  <div className="flex justify-between items-center pb-3">
                     <div><h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">{selectedFood.name}</h4><p className="text-[8px] font-black text-indigo-400 uppercase italic">Verified</p></div>
                     <button onClick={() => setSelectedFood(null)} className="bg-white dark:bg-white/10 px-2.5 py-1.5 rounded-lg text-indigo-500 font-black text-[8px] uppercase border border-indigo-100/50">Change</button>
                   </div>
@@ -139,7 +141,7 @@ export function MealLogSection({
         </AnimatePresence>
       </motion.div>
 
-      {/* Feed Section - COMPACT & ALWAYS VISIBLE ACTIONS ON MOBILE */}
+      {/* Feed Section - REMOVED ALL SEPARATION LINES */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-2 text-slate-300 dark:text-slate-700">
           <History size={18} />
@@ -147,36 +149,31 @@ export function MealLogSection({
         </div>
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
-            {logs.length === 0 && !isLoading && (<motion.div initial={{ opacity: 0 }} className="bg-white/50 dark:bg-white/5 rounded-[32px] p-10 border-2 border-dashed border-slate-100 dark:border-white/5 flex flex-col items-center gap-3 text-center"><Flame size={28} className="text-slate-300" /><p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Empty</p></motion.div>)}
+            {logs.length === 0 && !isLoading && (<motion.div initial={{ opacity: 0 }} className="bg-white/50 dark:bg-white/5 rounded-3xl p-10 border-2 border-dashed flex flex-col items-center gap-3 text-center"><Flame size={28} className="text-gray-300" /><p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Empty</p></motion.div>)}
             {logs.map((l: any) => (
               <motion.div key={l.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={iosSpring} className="relative group">
-                <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[28px] border border-white/50 dark:border-white/5 shadow-md group-hover:scale-[1.005] transition-all duration-300" />
-                <div className="relative p-5 space-y-4">
+                <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-2xl border border-white dark:border-white/5 shadow-md transition-all duration-300 group-hover:scale-[1.005]" />
+                <div className="relative p-4 space-y-3">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className={`mt-0.5 p-2 rounded-lg shrink-0 ${l.isVerified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400'}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 p-2 rounded-lg ${l.isVerified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400'}`}>
                         {l.isVerified ? <CheckCircle2 size={18} strokeWidth={3} /> : <AlertTriangle size={18} strokeWidth={3} />}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tight truncate">{l.foodName}</h4>
+                      <div>
+                        <h4 className="text-base font-black text-gray-900 dark:text-white tracking-tight">{l.foodName}</h4>
                         {editingId === l.id ? (
-                          <div className="mt-2 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 p-1 rounded-lg border border-indigo-100/30 w-fit"><input type="number" value={editQty} onChange={e => setEditQty(Number(e.target.value))} className="w-14 bg-transparent border-none text-sm font-black text-indigo-600 dark:text-indigo-400 p-0 ml-2 focus:ring-0" autoFocus /><div className="flex gap-1"><button onClick={() => handleUpdateLog(l)} className="p-1.5 bg-indigo-600 text-white rounded-md"><Check size={10} strokeWidth={4} /></button><button onClick={() => setEditingId(null)} className="p-1.5 bg-white dark:bg-white/10 text-gray-400 rounded-md"><X size={10} strokeWidth={4} /></button></div></div>
-                        ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1 truncate">Qty: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
+                          <div className="mt-1 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 p-1 rounded-lg border border-indigo-100/30"><input type="number" value={editQty} onChange={e => setEditQty(Number(e.target.value))} className="w-14 bg-transparent border-none text-sm font-black text-indigo-600 dark:text-indigo-400 p-0 ml-2" autoFocus /><div className="flex gap-1"><button onClick={() => handleUpdateLog(l)} className="p-1 bg-indigo-600 text-white rounded-md"><Check size={10} strokeWidth={4} /></button><button onClick={() => setEditingId(null)} className="p-1 bg-white dark:bg-white/10 text-gray-400 rounded-md"><X size={10} strokeWidth={4} /></button></div></div>
+                        ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Amount: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
                       </div>
                     </div>
-                    
-                    {/* FIXED: ACTION BUTTONS ALWAYS VISIBLE ON MOBILE (lg:opacity-0 hides them only on desktop) */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
-                        <button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm border border-indigo-100/30 dark:border-indigo-500/10"><Pencil size={14} /></button>
-                        <button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm border border-red-100/30 dark:border-red-500/10"><Trash2 size={14} /></button>
-                      </div>
-                      <span className="text-[7px] font-black uppercase py-1.5 px-2 rounded-md bg-gray-50 dark:bg-white/5 text-gray-400 border border-slate-100 dark:border-white/5">{l.isVerified ? 'Gold' : 'AI'}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="opacity-0 group-hover:opacity-100 transition-all flex gap-1"><button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm"><Pencil size={14} /></button><button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm"><Trash2 size={14} /></button></div>
+                      <span className="text-[7px] font-black uppercase py-1 px-2 rounded-md bg-gray-50 dark:bg-white/5 text-gray-400">{l.isVerified ? 'Verified' : 'AI'}</span>
                     </div>
                   </div>
-                  
                   <div className="grid grid-cols-4 gap-2 pt-1">
-                    {[{ label: 'CAL', val: l.macros.calories, color: 'text-orange-500', bg: 'bg-orange-50/50' }, { label: 'PRO', val: l.macros.protein, color: 'text-blue-500', bg: 'bg-blue-50/50' }, { label: 'CARB', val: l.macros.carbs, color: 'text-emerald-500', bg: 'bg-emerald-50/50' }, { label: 'FAT', val: l.macros.fats, color: 'text-purple-500', bg: 'bg-purple-50/50' }].map(m => (<div key={m.label} className={`${m.bg} dark:bg-white/5 rounded-2xl py-2 px-1 text-center border border-white dark:border-white/5 transition-all duration-500`}>
+                    {[{ label: 'Cal', val: l.macros.calories, color: 'text-orange-500', bg: 'bg-orange-50/50' }, { label: 'Pro', val: l.macros.protein, color: 'text-blue-500', bg: 'bg-blue-50/50' }, { label: 'Carb', val: l.macros.carbs, color: 'text-emerald-500', bg: 'bg-emerald-50/50' }, { label: 'Fat', val: l.macros.fats, color: 'text-purple-500', bg: 'bg-purple-50/50' }].map(m => (
+                      <div key={m.label} className={`${m.bg} dark:bg-white/5 rounded-2xl py-2 px-1 text-center transition-all duration-500 group-hover:scale-105`}>
                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">{m.label}</p>
                         <p className={`text-xs font-black ${m.color} dark:text-white`}>{Math.round(m.val)}</p>
                       </div>))}

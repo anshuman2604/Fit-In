@@ -22,15 +22,23 @@ export function SettingsModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6">
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose} 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+          />
           
+          {/* Modal Card */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 40 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
             exit={{ opacity: 0, scale: 0.9, y: 40 }} 
             transition={iosSpring} 
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 backdrop-blur-3xl rounded-[32px] sm:rounded-[44px] shadow-3xl border border-white/20 dark:border-white/5 overflow-hidden"
+            className="relative w-full max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-[32px] sm:rounded-[44px] shadow-3xl border border-white/20 dark:border-white/5 overflow-hidden"
           >
             
             {/* AI Calculation Overlay */}
@@ -40,7 +48,7 @@ export function SettingsModal({
                   initial={{ opacity: 0 }} 
                   animate={{ opacity: 1 }} 
                   exit={{ opacity: 0 }} 
-                  className="absolute inset-0 z-[120] bg-indigo-600/90 dark:bg-indigo-900/90 backdrop-blur-3xl flex flex-col items-center justify-center text-white p-6 sm:p-12 text-center"
+                  className="absolute inset-0 z-[160] bg-indigo-600/90 dark:bg-indigo-900/90 backdrop-blur-3xl flex flex-col items-center justify-center text-white p-6 sm:p-12 text-center"
                 >
                   <motion.div 
                     animate={{ rotate: 360, scale: [1, 1.1, 1] }} 
@@ -55,7 +63,6 @@ export function SettingsModal({
               )}
             </AnimatePresence>
 
-            {/* COMPACT MODAL PADDING */}
             <div className="relative p-5 sm:p-10 space-y-5 sm:space-y-8">
               <div className="flex justify-between items-center">
                 <div>
@@ -67,7 +74,6 @@ export function SettingsModal({
                 </button>
               </div>
 
-              {/* REDUCED SPACING FOR FORM */}
               <form onSubmit={onSave} className="space-y-5 sm:space-y-8 max-h-[80vh] sm:max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
                 <div className="space-y-5 sm:space-y-8 relative">
                   <div className="space-y-3 sm:space-y-4">
@@ -78,7 +84,7 @@ export function SettingsModal({
                           <label className="text-[8px] sm:text-[9px] font-black uppercase text-slate-400 ml-1 tracking-widest">{f.replace('_', ' ')}</label>
                           <input 
                             type="number" 
-                            value={editProfile[f]} 
+                            value={editProfile[f] || ''} 
                             onChange={e => handleNumberChange(f, e.target.value)} 
                             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-xl sm:rounded-[18px] p-3 sm:p-4 font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm sm:text-base" 
                           />
@@ -96,11 +102,10 @@ export function SettingsModal({
                             <option value="bulk">Bulk</option>
                             <option value="recomp">Recomp</option>
                           </select>
-                          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         </div>
                       </div>
                     </div>
-                    {/* COMPACT AI BUTTON */}
                     <button type="button" onClick={onRecalculate} className="w-full bg-indigo-600 text-white font-black py-4 sm:py-5 rounded-xl sm:rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest">
                       <Sparkles size={14} fill="white" /> Recalculate with AI
                     </button>
@@ -115,7 +120,7 @@ export function SettingsModal({
                           <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/10 rounded-xl sm:rounded-[20px] p-2 sm:p-3 shadow-inner">
                             <input 
                               type="number" 
-                              value={editProfile[f]} 
+                              value={editProfile[f] || ''} 
                               onChange={e => handleNumberChange(f, e.target.value)} 
                               className="w-full bg-transparent border-none font-black text-center text-slate-900 dark:text-white outline-none text-base sm:text-lg p-0" 
                             />
