@@ -7,7 +7,7 @@
 
 :root {
   --background: #f1f5f9;
-  --foreground: #0f172a;
+  --foreground: #020617;
 }
 
 .dark {
@@ -18,11 +18,14 @@
 /* Force dark mode variant */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Global Transitions */
+/* 
+   ELITE GLOBAL TRANSITION 
+   This creates the "Melt" effect when switching themes.
+*/
 * {
-  transition-property: background-color, border-color, color, fill, stroke, opacity;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 400ms;
+  transition-duration: 700ms; /* Slowed down for an elegant melt feel */
 }
 
 body {
@@ -34,12 +37,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Premium Compact Glassmorphism */
+/* Glassmorphism utility */
 .glass {
-  @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/20 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none;
+  @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-3xl border border-white/20 dark:border-white/5;
 }
 
-/* iOS Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -52,9 +55,4 @@ body {
 }
 .dark ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.05);
-}
-
-/* Typography refinements */
-h1, h2, h3, h4 {
-  @apply tracking-tight;
 }

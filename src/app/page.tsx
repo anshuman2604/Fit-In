@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Sparkles, Loader2, LogOut, Settings, Sun, Moon, BrainCircuit
+  Sparkles, Loader2, LogOut, Settings, Sun, Moon, BrainCircuit, Dna
 } from "lucide-react";
 import { MacroSection } from "@/components/MacroSection";
 import { SettingsModal } from "@/components/SettingsModal";
@@ -24,7 +24,6 @@ export default function Dashboard() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Dashboard State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editProfile, setEditProfile] = useState<any>({ goal: "recomp", target_protein: 150 });
   const [activeTab, setActiveTab] = useState<"ai" | "precise">("ai");
@@ -114,13 +113,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-500 pb-20 overflow-x-hidden">
-      <AnimatePresence>{isAILoading && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] bg-indigo-600/95 backdrop-blur-2xl flex flex-col items-center justify-center text-white p-10 text-center">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="w-16 h-16 border-4 border-dashed border-white/30 rounded-full mb-6 flex items-center justify-center"><BrainCircuit size={28} className="animate-pulse" /></motion.div>
-          <h3 className="text-xl font-black uppercase tracking-tight mb-2">Coach is thinking...</h3>
-        </motion.div>
-      )}</AnimatePresence>
-
       <AskAI />
       <SettingsModal 
         isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} 
@@ -131,21 +123,72 @@ export default function Dashboard() {
       />
 
       <header className="bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl border-b border-slate-200 dark:border-white/5 sticky top-0 z-[90] transition-all duration-700">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-          <div className="flex items-center gap-3"><div className="w-11 h-11 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none"><Sparkles size={24} /></div><div><h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tighter transition-all duration-500">Fit In AI</h1><p className="text-[9px] uppercase font-black text-gray-400">{profile?.display_name}'s Tracker</p></div></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <button onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} className="p-3 bg-gray-50 dark:bg-white/5 text-gray-400 rounded-2xl hover:text-indigo-600 transition-all shadow-sm">
-              {mounted && (resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />)}
+            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none"><Sparkles size={22} /></div>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tighter">Fit In AI</h1>
+              <p className="text-[8px] uppercase font-black text-gray-400">{profile?.display_name}'s Tracker</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} className="p-2.5 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-600/20 transition-all">
+              {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button onClick={() => { supabase.auth.signOut(); router.push("/login"); }} className="p-3 bg-gray-50 dark:bg-white/5 text-gray-400 rounded-2xl hover:text-red-500 transition-all shadow-sm"><LogOut size={20} /></button>
+            <button onClick={() => { supabase.auth.signOut(); router.push("/login"); }} className="p-2.5 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-600/20 transition-all"><LogOut size={20} /></button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 pt-10 space-y-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6 sm:space-y-8">
         <MacroSection consumed={consumed} targets={targets} />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-7">
+        
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 sm:gap-8">
+          
+          {/* INSIGHTS FIRST ON MOBILE */}
+          <div className="order-1 lg:order-2 lg:col-span-5 space-y-6 sm:space-y-8">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[32px] p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden group transition-all duration-700">
+              <div className="absolute -right-6 -bottom-6 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-1000"><Dna size={160} /></div>
+              <div className="flex justify-between items-center relative z-10 mb-6">
+                <h3 className="text-xl font-black tracking-tight flex items-center gap-2"><Sparkles size={20} /> Insights</h3>
+                <button onClick={() => setIsSettingsOpen(true)} className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10 backdrop-blur-md"><Settings size={18} /></button>
+              </div>
+              <div className="space-y-6 relative z-10">
+                <div className="space-y-2.5">
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest opacity-70"><span>Daily Progress</span><span>{Math.round((consumed.calories / targets.calories) * 100)}%</span></div>
+                  <div className="h-3 bg-white/20 rounded-full p-0.5"><motion.div animate={{ width: `${Math.min((consumed.calories / targets.calories) * 100, 100)}%` }} className="h-full bg-white rounded-full shadow-[0_0_15px_white]" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* FIXED PADDING AND FONT ALIGNMENT FOR MOBILE */}
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/5 shadow-inner flex flex-col items-center justify-center text-center">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase opacity-60 tracking-widest">Remaining</p>
+                    <p className="text-2xl sm:text-3xl font-black mt-1 leading-none">{Math.max(targets.calories - Math.round(consumed.calories), 0)}</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/5 shadow-inner flex flex-col items-center justify-center text-center">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase opacity-60 tracking-widest">Status</p>
+                    <p className="text-xl sm:text-2xl font-black mt-1 uppercase leading-none">Perfect</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative group transition-all duration-700">
+              <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-[32px] border border-white dark:border-white/5 shadow-xl transition-all duration-700 group-hover:scale-[1.005]" />
+              <div className="relative p-6 sm:p-8 space-y-5">
+                <h3 className="text-lg font-black tracking-tight text-gray-900 dark:text-white leading-none">Diet Tips</h3>
+                <ul className="space-y-4">
+                  {["Chaas after lunch.", "Ghee in your dal.", "Try Bajra Roti."].map((t, i) => (
+                    <li key={i} className="flex gap-3 text-xs text-gray-500 dark:text-gray-400 font-bold leading-relaxed transition-all">
+                      <span className="w-6 h-6 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black">{i + 1}</span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="order-2 lg:order-1 lg:col-span-7">
             <MealLogSection 
               logs={logs} fetchLogs={fetchLogs} user={user}
               activeTab={activeTab} setActiveTab={setActiveTab}
@@ -156,19 +199,7 @@ export default function Dashboard() {
               isLoading={isLoading} editingId={editingId} setEditingId={setEditingId} editQty={editQty} setEditQty={setEditQty} handleUpdateLog={handleUpdateLog} handleDeleteLog={handleDeleteLog}
             />
           </div>
-          <div className="lg:col-span-5 space-y-10">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[40px] p-10 text-white shadow-3xl relative overflow-hidden group transition-all duration-700">
-              <div className="flex justify-between items-center relative z-10 mb-8"><h3 className="text-2xl font-black tracking-tighter flex items-center gap-3"><Sparkles size={24} /> Insights</h3><button onClick={() => setIsSettingsOpen(true)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all border border-white/10 backdrop-blur-md"><Settings size={20} /></button></div>
-              <div className="space-y-8 relative z-10">
-                <div className="space-y-3"><div className="flex justify-between text-xs font-black opacity-70"><span>Daily Progress</span><span>{Math.round((consumed.calories / targets.calories) * 100)}%</span></div><div className="h-4 bg-white/20 rounded-full p-0.5"><motion.div animate={{ width: `${Math.min((consumed.calories / targets.calories) * 100, 100)}%` }} className="h-full bg-white rounded-full shadow-[0_0_20px_white]" /></div></div>
-                <div className="grid grid-cols-2 gap-5 pt-4"><div className="bg-white/10 backdrop-blur-md rounded-[28px] p-6 border border-white/5 shadow-inner text-center"><p className="text-[10px] font-black uppercase opacity-60">Remaining</p><p className="text-3xl font-black tracking-tighter mt-1">{Math.max(targets.calories - Math.round(consumed.calories), 0)}</p></div><div className="bg-white/10 backdrop-blur-md rounded-[28px] p-6 border border-white/5 shadow-inner text-center"><p className="text-[10px] font-black uppercase opacity-60">Status</p><p className="text-3xl font-black tracking-tighter mt-1">On Track</p></div></div>
-              </div>
-            </div>
-            <div className="relative group transition-all duration-700">
-              <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-[40px] border border-white dark:border-white/5 shadow-2xl transition-all duration-700 group-hover:scale-[1.01]" />
-              <div className="relative p-10 space-y-6"><h3 className="text-xl font-black tracking-tight mb-2">Indian Diet Tips</h3><ul className="space-y-5">{["Drink Chaas after lunch.", "Add Ghee to your dal.", "Try Bajra Roti."].map((t, i) => (<li key={i} className="flex gap-4 text-sm text-gray-500 font-bold leading-relaxed hover:translate-x-1 transition-all"><span className="w-7 h-7 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 rounded-xl flex items-center justify-center shrink-0 text-[11px] font-black">{i + 1}</span>{t}</li>))}</ul></div>
-            </div>
-          </div>
+
         </div>
       </main>
     </div>

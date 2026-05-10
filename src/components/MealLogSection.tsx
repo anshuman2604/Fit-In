@@ -15,7 +15,7 @@ export function MealLogSection({
   const iosSpring: any = { type: "spring", stiffness: 300, damping: 30 };
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // FIX: Close dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -37,7 +37,7 @@ export function MealLogSection({
 
   return (
     <div className="space-y-8">
-      {/* Input Section */}
+      {/* Input Section - FIXED DROPDOWN Z-INDEX */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
@@ -45,7 +45,7 @@ export function MealLogSection({
         className="relative glass rounded-[32px] p-7 space-y-6 z-[60]"
       >
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-black tracking-tight text-gray-900 dark:text-white uppercase">Meal Log</h2>
+          <h2 className="text-xl font-black tracking-tight text-gray-900 dark:text-white uppercase leading-none">Meal Log</h2>
           <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
             <button onClick={() => setActiveTab("ai")} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm' : 'text-gray-400'}`}>AI Parser</button>
             <button onClick={() => setActiveTab("precise")} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${activeTab === 'precise' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm' : 'text-gray-400'}`}>Precise</button>
@@ -79,7 +79,7 @@ export function MealLogSection({
             </motion.div>
           ) : activeTab === "ai" ? (
             <motion.div key="ai" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-              <textarea value={inputText} onChange={e => setInputText(e.target.value)} placeholder="e.g., Maine 2 parathe aur 1 bowl dahi khaya" className="w-full h-28 bg-slate-50 dark:bg-black/30 border-none rounded-2xl p-5 text-base font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none shadow-inner dark:text-white" />
+              <textarea value={inputText} onChange={e => setInputText(e.target.value)} placeholder="e.g., Maine 2 parathe aur 1 bowl dahi khaya" className="w-full h-28 bg-slate-50 dark:bg-black/30 border-none rounded-[24px] p-5 text-base font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none shadow-inner dark:text-white placeholder:text-slate-300" />
               <button onClick={handleLogMealAI} disabled={isLoading || !inputText.trim()} className="w-full py-4 rounded-xl bg-indigo-600 text-white font-black text-base shadow-xl flex items-center justify-center gap-3">{isLoading ? <Loader2 className="animate-spin" size={20} /> : <><Sparkles size={20} /> Use AI Magic</>}</button>
             </motion.div>
           ) : (
@@ -131,7 +131,7 @@ export function MealLogSection({
                       </div>
                     </div>
                   </div>
-                  <button onClick={handleDirectLog} disabled={isLoading} className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl text-base uppercase">Log Entry</button>
+                  <button onClick={handleDirectLog} disabled={isLoading} className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl text-base uppercase active:scale-95 transition-all">Log Entry</button>
                 </motion.div>
               )}
             </motion.div>
@@ -139,7 +139,7 @@ export function MealLogSection({
         </AnimatePresence>
       </motion.div>
 
-      {/* Feed Section - REMOVED HOVER SCALE */}
+      {/* Feed Section - COMPACT & ALWAYS VISIBLE ACTIONS ON MOBILE */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-2 text-slate-300 dark:text-slate-700">
           <History size={18} />
@@ -147,31 +147,36 @@ export function MealLogSection({
         </div>
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
-            {logs.length === 0 && !isLoading && (<motion.div initial={{ opacity: 0 }} className="bg-white/50 dark:bg-white/5 rounded-3xl p-10 border-2 border-dashed flex flex-col items-center gap-3 text-center"><Flame size={28} className="text-gray-300" /><p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Empty</p></motion.div>)}
+            {logs.length === 0 && !isLoading && (<motion.div initial={{ opacity: 0 }} className="bg-white/50 dark:bg-white/5 rounded-[32px] p-10 border-2 border-dashed border-slate-100 dark:border-white/5 flex flex-col items-center gap-3 text-center"><Flame size={28} className="text-slate-300" /><p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Empty</p></motion.div>)}
             {logs.map((l: any) => (
               <motion.div key={l.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={iosSpring} className="relative group">
-                <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-2xl border border-white dark:border-white/5 shadow-md transition-all duration-300" />
-                <div className="relative p-4 space-y-3">
+                <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[28px] border border-white/50 dark:border-white/5 shadow-md group-hover:scale-[1.005] transition-all duration-300" />
+                <div className="relative p-5 space-y-4">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 p-2 rounded-lg ${l.isVerified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400'}`}>
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`mt-0.5 p-2 rounded-lg shrink-0 ${l.isVerified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400'}`}>
                         {l.isVerified ? <CheckCircle2 size={18} strokeWidth={3} /> : <AlertTriangle size={18} strokeWidth={3} />}
                       </div>
-                      <div>
-                        <h4 className="text-base font-black text-gray-900 dark:text-white tracking-tight">{l.foodName}</h4>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tight truncate">{l.foodName}</h4>
                         {editingId === l.id ? (
-                          <div className="mt-1 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 p-1 rounded-lg border border-indigo-100/30"><input type="number" value={editQty} onChange={e => setEditQty(Number(e.target.value))} className="w-14 bg-transparent border-none text-sm font-black text-indigo-600 dark:text-indigo-400 p-0 ml-2" autoFocus /><div className="flex gap-1"><button onClick={() => handleUpdateLog(l)} className="p-1 bg-indigo-600 text-white rounded-md"><Check size={10} strokeWidth={4} /></button><button onClick={() => setEditingId(null)} className="p-1 bg-white dark:bg-white/10 text-gray-400 rounded-md"><X size={10} strokeWidth={4} /></button></div></div>
-                        ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Amount: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
+                          <div className="mt-2 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 p-1 rounded-lg border border-indigo-100/30 w-fit"><input type="number" value={editQty} onChange={e => setEditQty(Number(e.target.value))} className="w-14 bg-transparent border-none text-sm font-black text-indigo-600 dark:text-indigo-400 p-0 ml-2 focus:ring-0" autoFocus /><div className="flex gap-1"><button onClick={() => handleUpdateLog(l)} className="p-1.5 bg-indigo-600 text-white rounded-md"><Check size={10} strokeWidth={4} /></button><button onClick={() => setEditingId(null)} className="p-1.5 bg-white dark:bg-white/10 text-gray-400 rounded-md"><X size={10} strokeWidth={4} /></button></div></div>
+                        ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1 truncate">Qty: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="opacity-0 group-hover:opacity-100 transition-all flex gap-1"><button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm"><Pencil size={14} /></button><button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm"><Trash2 size={14} /></button></div>
-                      <span className="text-[7px] font-black uppercase py-1 px-2 rounded-md bg-gray-50 dark:bg-white/5 text-gray-400">{l.isVerified ? 'Verified' : 'AI'}</span>
+                    
+                    {/* FIXED: ACTION BUTTONS ALWAYS VISIBLE ON MOBILE (lg:opacity-0 hides them only on desktop) */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
+                        <button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm border border-indigo-100/30 dark:border-indigo-500/10"><Pencil size={14} /></button>
+                        <button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm border border-red-100/30 dark:border-red-500/10"><Trash2 size={14} /></button>
+                      </div>
+                      <span className="text-[7px] font-black uppercase py-1.5 px-2 rounded-md bg-gray-50 dark:bg-white/5 text-gray-400 border border-slate-100 dark:border-white/5">{l.isVerified ? 'Gold' : 'AI'}</span>
                     </div>
                   </div>
+                  
                   <div className="grid grid-cols-4 gap-2 pt-1">
-                    {/* FIX: REMOVED group-hover:scale-105 FROM MACRO BLOCKS */}
-                    {[{ label: 'Cal', val: l.macros.calories, color: 'text-orange-500', bg: 'bg-orange-50/50' }, { label: 'Pro', val: l.macros.protein, color: 'text-blue-500', bg: 'bg-blue-50/50' }, { label: 'Carb', val: l.macros.carbs, color: 'text-emerald-500', bg: 'bg-emerald-50/50' }, { label: 'Fat', val: l.macros.fats, color: 'text-purple-500', bg: 'bg-purple-50/50' }].map(m => (<div key={m.label} className={`${m.bg} dark:bg-white/5 rounded-2xl py-2 px-1 text-center transition-all duration-500`}>
+                    {[{ label: 'CAL', val: l.macros.calories, color: 'text-orange-500', bg: 'bg-orange-50/50' }, { label: 'PRO', val: l.macros.protein, color: 'text-blue-500', bg: 'bg-blue-50/50' }, { label: 'CARB', val: l.macros.carbs, color: 'text-emerald-500', bg: 'bg-emerald-50/50' }, { label: 'FAT', val: l.macros.fats, color: 'text-purple-500', bg: 'bg-purple-50/50' }].map(m => (<div key={m.label} className={`${m.bg} dark:bg-white/5 rounded-2xl py-2 px-1 text-center border border-white dark:border-white/5 transition-all duration-500`}>
                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">{m.label}</p>
                         <p className={`text-xs font-black ${m.color} dark:text-white`}>{Math.round(m.val)}</p>
                       </div>))}
