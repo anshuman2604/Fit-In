@@ -68,23 +68,45 @@ export function MealLogSection({
                       <p className="font-black text-indigo-600 text-base">{item.quantity}{item.unit}</p>
                     </div>
                     <div className="relative">
-                      <select value={item.selectedCandidateId || ''} onChange={e => setPendingItems((prev: any) => prev.map((p: any) => p.id === item.id ? { ...p, selectedCandidateId: e.target.value, isUsingAiFallback: false } : p))} className="w-full bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-white/5 rounded-xl p-2.5 text-xs font-black dark:text-white appearance-none outline-none">
-                        {item.candidates.map((c: any) => (<option key={c.id} value={c.id}>{c.name} ({c.calories} kcal)</option>))}
+                      <select 
+                        value={item.isUsingAiFallback ? 'fallback' : (item.selectedCandidateId || '')} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          setPendingItems((prev: any) => prev.map((p: any) => 
+                            p.id === item.id 
+                              ? { ...p, selectedCandidateId: val === 'fallback' ? null : val, isUsingAiFallback: val === 'fallback' } 
+                              : p
+                          ));
+                        }} 
+                        className="w-full bg-slate-50 dark:bg-black/40 border-none rounded-xl p-2.5 text-xs font-black dark:text-white appearance-none outline-none"
+                      >
+                        {item.candidates.map((c: any) => (
+                          <option key={c.id} value={c.id}>{c.name} ({Math.round(c.calories)} kcal)</option>
+                        ))}
+                        {/* ALWAYS SHOW AI OPTION IF DB MATCHES ARE EMPTY OR AS A FALLBACK */}
+                        <option value="fallback">
+                          {item.candidates.length > 0 ? "--- Use AI Estimate ---" : "⚠️ AI Estimated (No DB Match)"}
+                        </option>
                       </select>
                       <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     </div>
+                    {item.isUsingAiFallback && (
+                      <p className="text-[9px] text-amber-500 font-bold italic px-1">
+                        * Using AI estimated macros. These may be less accurate than verified items.
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setPendingItems([])} className="flex-1 bg-white dark:bg-white/5 text-gray-400 font-black py-3 rounded-2xl border border-slate-100 dark:border-white/5 uppercase text-[9px]">Cancel</button>
-                <button onClick={handleConfirmLogs} disabled={isLoading} className="flex-[2] bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase">{isLoading ? <Loader2 className="animate-spin" size={16} /> : "Log Meal"}</button>
+                <button onClick={handleConfirmLogs} disabled={isLoading} className="flex-[2] bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase">{isLoading ? <Loader2 className="animate-spin" size={16} /> : "Log Everything"}</button>
               </div>
             </motion.div>
           ) : activeTab === "ai" ? (
             <motion.div key="ai" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
               <textarea value={inputText} onChange={e => setInputText(e.target.value)} placeholder="e.g., Maine 2 parathe aur 1 bowl dahi khaya" className="w-full h-28 bg-slate-50 dark:bg-black/30 border-none rounded-[24px] p-5 text-base font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none shadow-inner dark:text-white placeholder:text-slate-300" />
-              <button onClick={handleLogMealAI} disabled={isLoading || !inputText.trim()} className="w-full py-4 rounded-xl bg-indigo-600 text-white font-black text-base shadow-xl flex items-center justify-center gap-3">{isLoading ? <Loader2 className="animate-spin" size={20} /> : <><Sparkles size={20} /> Use AI Magic</>}</button>
+              <button onClick={handleLogMealAI} disabled={isLoading || !inputText.trim()} className="w-full py-4 rounded-xl bg-indigo-600 text-white font-black text-base shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">{isLoading ? <Loader2 className="animate-spin" size={20} /> : <><Sparkles size={20} /> Use AI Magic</>}</button>
             </motion.div>
           ) : (
             <motion.div key="precise" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 relative">
@@ -157,23 +179,19 @@ export function MealLogSection({
                 <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-2xl border border-white dark:border-white/5 shadow-md transition-all duration-500 group-hover:scale-[1.005]" />
                 <div className="relative p-4 space-y-3">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 p-2 rounded-lg ${l.isVerified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400'}`}>
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`mt-0.5 p-2 rounded-lg shrink-0 ${l.isVerified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400'}`}>
                         {l.isVerified ? <CheckCircle2 size={18} strokeWidth={3} /> : <AlertTriangle size={18} strokeWidth={3} />}
                       </div>
-                      <div>
-                        <h4 className="text-base font-black text-gray-900 dark:text-white tracking-tight">{l.foodName}</h4>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tight truncate">{l.foodName}</h4>
                         {editingId === l.id ? (
-                          <div className="mt-1 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 p-1 rounded-lg border border-indigo-100/30"><input type="number" value={editQty} onChange={e => setEditQty(Number(e.target.value))} className="w-14 bg-transparent border-none text-sm font-black text-indigo-600 dark:text-indigo-400 p-0 ml-2" autoFocus /><div className="flex gap-1"><button onClick={() => handleUpdateLog(l)} className="p-1 bg-indigo-600 text-white rounded-md"><Check size={10} strokeWidth={4} /></button><button onClick={() => setEditingId(null)} className="p-1 bg-white dark:bg-white/10 text-gray-400 rounded-md"><X size={10} strokeWidth={4} /></button></div></div>
-                        ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Amount: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
+                          <div className="mt-1 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 p-1 rounded-lg border border-indigo-100/30 w-fit"><input type="number" value={editQty} onChange={e => setEditQty(Number(e.target.value))} className="w-14 bg-transparent border-none text-sm font-black text-indigo-600 dark:text-indigo-400 p-0 ml-2 focus:ring-0" autoFocus /><div className="flex gap-1"><button onClick={() => handleUpdateLog(l)} className="p-1 bg-indigo-600 text-white rounded-md"><Check size={10} strokeWidth={4} /></button><button onClick={() => setEditingId(null)} className="p-1 bg-white dark:bg-white/10 text-gray-400 rounded-md"><X size={10} strokeWidth={4} /></button></div></div>
+                        ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1 truncate">Amount: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
                       </div>
                     </div>
-                    {/* FIXED: Actions visible by default on mobile, only hidden on desktop hover */}
                     <div className="flex items-center gap-2">
-                      <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
-                        <button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm"><Pencil size={14} /></button>
-                        <button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm"><Trash2 size={14} /></button>
-                      </div>
+                      <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all flex gap-1"><button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm"><Pencil size={14} /></button><button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm"><Trash2 size={14} /></button></div>
                       <span className="text-[7px] font-black uppercase py-1 px-2 rounded-md bg-gray-50 dark:bg-white/5 text-gray-400">{l.isVerified ? 'Verified' : 'AI'}</span>
                     </div>
                   </div>

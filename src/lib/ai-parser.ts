@@ -1,10 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash', 
-  generationConfig: { responseMimeType: 'application/json' } 
-});
 
 const SYSTEM_PROMPT = `
 You are an expert Indian Nutrition Assistant. Your task is to parse user input about meals and extract structured data.
@@ -20,19 +16,14 @@ The user might speak in English, Hindi, or Hinglish.
    - Use "Chole" for chickpeas/chole.
    - Use "Dal" for dal/daal/lentils.
    - Use "Paneer" for paneer.
-   - If the user says "cooked rice", just extract "Rice" as the food name (the search engine will handle the cooked part).
-
-### Database Match vs Web Fallback:
-- You will be provided with a list of "Verified Foods" from our database if possible.
-- If the food is NOT in the verified list, you must provide estimated macros based on your knowledge.
-- ALWAYS try to simplify the food name to its core ingredient if it's a simple dish.
+   - If the user says "cooked rice", just extract "Rice" as the food name.
 
 ### Output Format:
-Return a JSON array of objects. ALWAYS include estimated macros and searchKeywords.
+Return a JSON array of objects ONLY. ALWAYS include estimated macros and searchKeywords.
 [
   {
     "food": "Name from user text",
-    "searchKeywords": ["keyword1", "keyword2"], // Core ingredients/synonyms (e.g. "pulao" -> ["Rice", "Pulao"])
+    "searchKeywords": ["keyword1", "keyword2"], 
     "quantity": number,
     "unit": "unit",
     "isEstimated": boolean, 
@@ -44,31 +35,38 @@ Return a JSON array of objects. ALWAYS include estimated macros and searchKeywor
     }
   }
 ]
-
-Current Date: ${new Date().toLocaleDateString()}
 `;
 
 export async function parseMeal(text: string) {
-  const prompt = `User Input: "${text}"\n\nParse this meal according to the rules.`;
-  
-  const result = await model.generateContent([SYSTEM_PROMPT, prompt]);
-  const response = await result.response;
-  let content = response.text();
-
-  // 1. Clean Markdown Code Blocks if present
-  if (content.includes('```')) {
-    content = content.replace(/```json\n?|```/g, '').trim();
-  }
-  
   try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('AI Parse Error: GEMINI_API_KEY is missing');
+      return [];
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash', 
+      generationConfig: { responseMimeType: 'application/json' } 
+    });
+
+    console.log('AI Parse: Parsing meal:', text);
+
+    const prompt = `User Input: "${text}"\n\nReturn JSON ONLY according to rules.`;
+    const result = await model.generateContent(SYSTEM_PROMPT + "\n\n" + prompt);
+    const response = await result.response;
+    let content = response.text();
+
+    // Clean Markdown
+    content = content.replace(/```json\n?|```/g, '').trim();
+    
     const parsed = JSON.parse(content);
-    // Standardize to a flat array
     if (Array.isArray(parsed)) return parsed;
     if (parsed.items && Array.isArray(parsed.items)) return parsed.items;
-    if (parsed.foods && Array.isArray(parsed.foods)) return parsed.foods;
     return [];
   } catch (error) {
-    console.error('JSON Parse Error. Raw Content:', content);
-    throw new Error('The AI returned a malformed response. Please try simplifying your input.');
+    console.error('AI Parse Error:', error);
+    return [];
   }
 }

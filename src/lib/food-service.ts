@@ -1,74 +1,80 @@
 import { supabase } from './supabase';
 
 export async function searchFood(query: string) {
-  const cleanQuery = query.toLowerCase().trim();
-  const queryWords = cleanQuery.split(/\s+/).filter(w => w.length > 1);
+  try {
+    const cleanQuery = query.toLowerCase().trim();
+    const queryWords = cleanQuery.split(/\s+/).filter(w => w.length > 1);
 
-  if (queryWords.length === 0) return [];
+    if (queryWords.length === 0) return [];
 
-  // Construct word-based search filter
-  // We want to find rows that contain ALL query words in any order
-  const wordFilter = queryWords.map(w => `%${w}%`).join(''); // This is still ordered.
-  
-  // Better approach: Use Postgres full-text search capability or manual AND logic
-  // For Supabase client, we'll try a flexible search first
-  
-  // 2. Search in foods
-  let foodQuery = supabase
-    .from('foods')
-    .select('*, serving_units(*)');
-    
-  queryWords.forEach(word => {
-    foodQuery = foodQuery.ilike('name', `%${word}%`);
-  });
+    // 1. Search in foods
+    let foodQuery = supabase
+      .from('foods')
+      .select('*, serving_units(*)');
+      
+    queryWords.forEach(word => {
+      foodQuery = foodQuery.ilike('name', `%${word}%`);
+    });
 
-  const { data: foodMatches } = await foodQuery;
+    const { data: foodMatches, error: foodError } = await foodQuery;
+    if (foodError) console.error('Food Search Error:', foodError);
 
-  // 1. Search in food_aliases
-  let aliasQuery = supabase
-    .from('food_aliases')
-    .select('food_id, alias, foods(*, serving_units(*))');
-  
-  queryWords.forEach(word => {
-    aliasQuery = aliasQuery.ilike('alias', `%${word}%`);
-  });
-  
-  const { data: aliasMatches } = await aliasQuery;
+    // 2. Search in food_aliases (Optional table)
+    let aliasMatches: any[] = [];
+    try {
+      let aliasQuery = supabase
+        .from('food_aliases')
+        .select('food_id, alias, foods(*, serving_units(*))');
+      
+      queryWords.forEach(word => {
+        aliasQuery = aliasQuery.ilike('alias', `%${word}%`);
+      });
+      
+      const { data, error } = await aliasQuery;
+      if (!error && data) aliasMatches = data;
+    } catch (e) {
+      // Ignore if table doesn't exist
+      console.warn('food_aliases table might be missing, skipping alias search.');
+    }
 
-  const resultsMap = new Map();
+    const resultsMap = new Map();
 
-  // Process alias matches
-  aliasMatches?.forEach((match: any) => {
-    if (match.foods) {
-      const food = match.foods;
-      const score = calculateScore(cleanQuery, match.alias, food.name);
+    // Process alias matches
+    aliasMatches?.forEach((match: any) => {
+      if (match.foods) {
+        const food = match.foods;
+        const score = calculateScore(cleanQuery, match.alias, food.name);
+        
+        if (!resultsMap.has(food.id) || score > resultsMap.get(food.id).score) {
+          resultsMap.set(food.id, {
+            ...food,
+            matchType: 'alias',
+            matchedVia: match.alias,
+            score: score
+          });
+        }
+      }
+    });
+
+    // Process direct food matches
+    foodMatches?.forEach((food: any) => {
+      const score = calculateScore(cleanQuery, food.name, food.name);
       
       if (!resultsMap.has(food.id) || score > resultsMap.get(food.id).score) {
         resultsMap.set(food.id, {
           ...food,
-          matchType: 'alias',
-          matchedVia: match.alias,
+          matchType: 'direct',
           score: score
         });
       }
-    }
-  });
+    });
 
-  // Process direct food matches
-  foodMatches?.forEach((food: any) => {
-    const score = calculateScore(cleanQuery, food.name, food.name);
-    
-    if (!resultsMap.has(food.id) || score > resultsMap.get(food.id).score) {
-      resultsMap.set(food.id, {
-        ...food,
-        matchType: 'direct',
-        score: score
-      });
-    }
-  });
-
-  // Sort by score descending
-  return Array.from(resultsMap.values()).sort((a, b) => b.score - a.score);
+    // Sort by score descending
+    return Array.from(resultsMap.values()).sort((a, b) => (b.score || 0) - (a.score || 0));
+  } catch (error) {
+    console.error('Global Search Error:', error);
+    return [];
+  }
 }
 
 /**

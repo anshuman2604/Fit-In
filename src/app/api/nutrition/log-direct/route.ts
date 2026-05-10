@@ -37,8 +37,7 @@ export async function POST(req: NextRequest) {
         protein: result.macros.protein,
         carbs: result.macros.carbs,
         fats: result.macros.fats,
-        is_verified: true,
-        meal_type: 'Snacks'
+        is_verified: true
       });
 
     if (dbError) throw dbError;

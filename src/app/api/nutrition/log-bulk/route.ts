@@ -27,8 +27,7 @@ export async function POST(req: NextRequest) {
           protein: item.aiEstimate.protein,
           carbs: item.aiEstimate.carbs,
           fats: item.aiEstimate.fats,
-          is_verified: false,
-          meal_type: 'Snacks'
+          is_verified: false
         });
       } else if (item.selectedCandidateId) {
         const result = await calculateMacros(item.selectedCandidateId, item.quantity, item.unit);
@@ -44,8 +43,7 @@ export async function POST(req: NextRequest) {
             protein: result.macros.protein,
             carbs: result.macros.carbs,
             fats: result.macros.fats,
-            is_verified: true,
-            meal_type: 'Snacks'
+            is_verified: true
           });
         } else {
           console.log('Math engine failed for verified item. Falling back to AI macros.');
@@ -59,8 +57,7 @@ export async function POST(req: NextRequest) {
               protein: item.aiEstimate.protein,
               carbs: item.aiEstimate.carbs,
               fats: item.aiEstimate.fats,
-              is_verified: false,
-              meal_type: 'Snacks'
+              is_verified: false
             });
           }
         }
@@ -75,8 +72,7 @@ export async function POST(req: NextRequest) {
           protein: item.aiEstimate.protein,
           carbs: item.aiEstimate.carbs,
           fats: item.aiEstimate.fats,
-          is_verified: false,
-          meal_type: 'Snacks'
+          is_verified: false
         });
       }
     }
