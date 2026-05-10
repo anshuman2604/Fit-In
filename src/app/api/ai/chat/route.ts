@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'AI configuration error.' }, { status: 500 });
     }
@@ -42,31 +42,23 @@ REMAINING: ${targets.calories - consumed.calories} kcal (${targets.protein - con
 RULES: Suggest specific Indian foods. Use Markdown. Be concise.
 `;
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
-      systemInstruction: SYSTEM_PROMPT
+    const openai = new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
     });
 
-    const history = [];
-    const chatMessages = messages.slice(0, -1);
+    const response = await openai.chat.completions.create({
+      model: 'z-ai/glm-4.5-air:free',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages.map((m: any) => ({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.content
+        }))
+      ]
+    });
 
-    for (let i = 0; i < chatMessages.length; i++) {
-      const msg = chatMessages[i];
-      if (i === 0 && msg.role === 'model') continue; 
-      
-      history.push({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      });
-    }
-
-    const chat = model.startChat({ history });
-    const lastMessage = messages[messages.length - 1].content;
-    const result = await chat.sendMessage(lastMessage);
-    const response = await result.response;
-    
-    return NextResponse.json({ content: response.text() });
+    return NextResponse.json({ content: response.choices[0].message.content });
 
   } catch (error: any) {
     console.error('AI CHAT ERROR:', error);
