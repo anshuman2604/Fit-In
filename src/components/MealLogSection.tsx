@@ -31,7 +31,9 @@ export function MealLogSection({
   const onSearchChange = (val: string) => {
     setSearchQuery(val);
     if (val.length < 2) {
-      setSearchResults?.([]);
+      if (typeof setSearchResults === 'function') {
+        setSearchResults([]);
+      }
       return;
     }
     handleSearch(val);
@@ -39,7 +41,7 @@ export function MealLogSection({
 
   return (
     <div className="space-y-8">
-      {/* Input Section - HIGHEST Z-INDEX AND PORTAL-LIKE DISPLAY */}
+      {/* Input Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
@@ -60,13 +62,13 @@ export function MealLogSection({
               <div className="bg-indigo-50/30 dark:bg-indigo-500/5 rounded-3xl p-5 border border-indigo-100/30 space-y-3">
                 <h3 className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.2em] flex items-center gap-2"><CheckCircle2 size={14} /> Review Items</h3>
                 {pendingItems.map((item: any) => (
-                  <div key={item.id} className="bg-white/80 dark:bg-slate-800/80 p-4 rounded-2xl border border-indigo-100/20 shadow-sm">
-                    <div className="flex justify-between items-center mb-3">
-                      <div><p className="font-black text-base text-gray-900 dark:text-white leading-none">"{item.originalName}"</p></div>
-                      <div className="text-right"><p className="font-black text-lg text-indigo-600">{item.quantity}{item.unit}</p></div>
+                  <div key={item.id} className="bg-white/80 dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm space-y-3">
+                    <div className="flex justify-between items-center">
+                      <p className="font-black text-base text-gray-900 dark:text-white">"{item.originalName}"</p>
+                      <p className="font-black text-indigo-600 text-base">{item.quantity}{item.unit}</p>
                     </div>
                     <div className="relative">
-                      <select value={item.selectedCandidateId || ''} onChange={e => setPendingItems((prev: any) => prev.map((p: any) => p.id === item.id ? { ...p, selectedCandidateId: e.target.value, isUsingAiFallback: false } : p))} className="w-full bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-white/5 rounded-xl p-3 text-xs font-black dark:text-white appearance-none outline-none">
+                      <select value={item.selectedCandidateId || ''} onChange={e => setPendingItems((prev: any) => prev.map((p: any) => p.id === item.id ? { ...p, selectedCandidateId: e.target.value, isUsingAiFallback: false } : p))} className="w-full bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-white/5 rounded-xl p-2.5 text-xs font-black dark:text-white appearance-none outline-none">
                         {item.candidates.map((c: any) => (<option key={c.id} value={c.id}>{c.name} ({c.calories} kcal)</option>))}
                       </select>
                       <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -75,7 +77,7 @@ export function MealLogSection({
                 ))}
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setPendingItems([])} className="flex-1 bg-white dark:bg-white/5 text-gray-400 font-black py-3 rounded-2xl border border-gray-100 dark:border-white/5 uppercase text-[9px]">Cancel</button>
+                <button onClick={() => setPendingItems([])} className="flex-1 bg-white dark:bg-white/5 text-gray-400 font-black py-3 rounded-2xl border border-slate-100 dark:border-white/5 uppercase text-[9px]">Cancel</button>
                 <button onClick={handleConfirmLogs} disabled={isLoading} className="flex-[2] bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase">{isLoading ? <Loader2 className="animate-spin" size={16} /> : "Log Meal"}</button>
               </div>
             </motion.div>
@@ -141,7 +143,7 @@ export function MealLogSection({
         </AnimatePresence>
       </motion.div>
 
-      {/* Feed Section - REMOVED ALL SEPARATION LINES */}
+      {/* Feed Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-2 text-slate-300 dark:text-slate-700">
           <History size={18} />
@@ -152,7 +154,7 @@ export function MealLogSection({
             {logs.length === 0 && !isLoading && (<motion.div initial={{ opacity: 0 }} className="bg-white/50 dark:bg-white/5 rounded-3xl p-10 border-2 border-dashed flex flex-col items-center gap-3 text-center"><Flame size={28} className="text-gray-300" /><p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Empty</p></motion.div>)}
             {logs.map((l: any) => (
               <motion.div key={l.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={iosSpring} className="relative group">
-                <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-2xl border border-white dark:border-white/5 shadow-md transition-all duration-300 group-hover:scale-[1.005]" />
+                <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/40 backdrop-blur-2xl rounded-2xl border border-white dark:border-white/5 shadow-md transition-all duration-500 group-hover:scale-[1.005]" />
                 <div className="relative p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex items-start gap-3">
@@ -166,14 +168,18 @@ export function MealLogSection({
                         ) : (<p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Amount: <span className="font-black text-gray-700 dark:text-gray-200">{l.quantity} {l.unit}</span></p>)}
                       </div>
                     </div>
+                    {/* FIXED: Actions visible by default on mobile, only hidden on desktop hover */}
                     <div className="flex items-center gap-2">
-                      <div className="opacity-0 group-hover:opacity-100 transition-all flex gap-1"><button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm"><Pencil size={14} /></button><button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm"><Trash2 size={14} /></button></div>
+                      <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
+                        <button onClick={() => {setEditingId(l.id); setEditQty(l.quantity);}} className="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 rounded-lg active:scale-90 shadow-sm"><Pencil size={14} /></button>
+                        <button onClick={() => handleDeleteLog(l.id)} className="p-2 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 rounded-lg active:scale-90 shadow-sm"><Trash2 size={14} /></button>
+                      </div>
                       <span className="text-[7px] font-black uppercase py-1 px-2 rounded-md bg-gray-50 dark:bg-white/5 text-gray-400">{l.isVerified ? 'Verified' : 'AI'}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2 pt-1">
                     {[{ label: 'Cal', val: l.macros.calories, color: 'text-orange-500', bg: 'bg-orange-50/50' }, { label: 'Pro', val: l.macros.protein, color: 'text-blue-500', bg: 'bg-blue-50/50' }, { label: 'Carb', val: l.macros.carbs, color: 'text-emerald-500', bg: 'bg-emerald-50/50' }, { label: 'Fat', val: l.macros.fats, color: 'text-purple-500', bg: 'bg-purple-50/50' }].map(m => (
-                      <div key={m.label} className={`${m.bg} dark:bg-white/5 rounded-2xl py-2 px-1 text-center transition-all duration-500 group-hover:scale-105`}>
+                      <div key={m.label} className={`${m.bg} dark:bg-white/5 rounded-2xl py-2 px-1 text-center transition-all duration-500`}>
                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">{m.label}</p>
                         <p className={`text-xs font-black ${m.color} dark:text-white`}>{Math.round(m.val)}</p>
                       </div>))}
