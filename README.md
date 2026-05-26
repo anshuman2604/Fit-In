@@ -2,7 +2,6 @@
 
 **Fit In AI** is a premium, AI-driven nutrition and fitness platform designed specifically for the unique needs of the Indian lifestyle. Most global apps fail to understand Indian home-cooked meals, regional dishes, and household measurements—Fit In AI solves this with high-precision AI parsing and a "Gold Standard" verified database.
 
-![Dashboard Preview](https://via.placeholder.com/1200x600/6366f1/ffffff?text=Fit+In+AI+Premium+Dashboard)
 
 ## ✨ Core Features
 
