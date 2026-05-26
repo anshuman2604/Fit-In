@@ -83,4 +83,3 @@ Experience a high-end, premium UI inspired by modern iOS aesthetics:
 Fit In AI uses **Row Level Security (RLS)** to ensure that your physical metrics and meal logs are strictly private. No one, not even the platform admins, can access your personal logs without authorization.
 
 ---
-Built with ❤️ for a healthier India.
